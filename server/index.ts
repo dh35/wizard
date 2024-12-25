@@ -1,60 +1,45 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import { sequelize } from './models';
-import dotenv from 'dotenv';
-
-// Routes
-import cpuRoutes from './routes/cpu';
-import gpuRoutes from './routes/gpu';
 import chassisRoutes from './routes/chassis';
-import ramRoutes from './routes/ram';
-import storageRoutes from './routes/storage';
-import quotesRouter from './routes/quotes';
-
-dotenv.config();
+import quotesRoutes from './routes/quotes';
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// Middleware
+// Basic middleware
 app.use(cors());
 app.use(express.json());
 
-// Routes
-app.use('/api/cpu', cpuRoutes);
-app.use('/api/gpu', gpuRoutes);
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, '../client/build')));
+
+// API routes
 app.use('/api/chassis', chassisRoutes);
-app.use('/api/ram', ramRoutes);
-app.use('/api/storage', storageRoutes);
-app.use('/api', quotesRouter);
+app.use('/api/quotes', quotesRoutes);
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'healthy' });
+// Simple error handler
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error(err);
+  res.status(500).send('Server Error');
 });
 
-// Error handling middleware
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+// Serve React app for all other routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/build/index.html'));
 });
 
-// Database connection and server start
-async function startServer() {
-  try {
-    await sequelize.authenticate();
-    console.log('Database connection established successfully.');
-    
-    await sequelize.sync();
-    console.log('Database models synchronized.');
-
+// Start server
+sequelize.sync()
+  .then(() => {
+    console.log('Database connected');
     app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+      console.log(`Server running on port ${PORT}`);
     });
-  } catch (error) {
-    console.error('Unable to start server:', error);
-    process.exit(1);
-  }
-}
+  })
+  .catch((err) => {
+    console.error('Database connection failed:', err);
+  });
 
-startServer(); 
+export default app; 
