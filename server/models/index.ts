@@ -1,29 +1,4 @@
 import { Sequelize, DataTypes, Model, InferAttributes, InferCreationAttributes, CreationOptional } from 'sequelize';
-import dotenv from 'dotenv';
-import path from 'path';
-
-// Load environment variables based on NODE_ENV
-const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
-
-// In production, we need to go up two levels from dist/models to reach root
-const rootDir = process.env.NODE_ENV === 'production' 
-  ? path.resolve(__dirname, '../../../')  // From dist/models to project root
-  : path.resolve(__dirname, '../../');    // From server/models to project root
-
-const envPath = path.join(rootDir, envFile);
-dotenv.config({ path: envPath });
-
-// Debug environment loading
-console.log('Current directory:', __dirname);
-console.log('Root directory:', rootDir);
-console.log('Environment file path:', envPath);
-console.log('Environment variables:', {
-  NODE_ENV: process.env.NODE_ENV,
-  DB_HOST: process.env.DB_HOST,
-  DB_NAME: process.env.DB_NAME,
-  DB_USER: process.env.DB_USER,
-  hasPassword: !!process.env.DB_PASSWORD
-});
 
 // Validate database configuration
 const validateDbConfig = () => {
@@ -40,6 +15,15 @@ const validateDbConfig = () => {
 };
 
 validateDbConfig();
+
+// Debug database configuration
+console.log('Database configuration:', {
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  hasPassword: !!process.env.DB_PASSWORD,
+  nodeEnv: process.env.NODE_ENV
+});
 
 // Create Sequelize instance
 const sequelizeConfig = process.env.DATABASE_URL 

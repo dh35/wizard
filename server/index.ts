@@ -1,6 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import dotenv from 'dotenv';
+
+// Load environment variables first, before any other imports
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
+dotenv.config({ path: path.join(__dirname, '..', envFile) });
+
 import { sequelize } from './models';
 import chassisRoutes from './routes/chassis';
 import quotesRoutes from './routes/quotes';
