@@ -6,16 +6,33 @@ import path from 'path';
 const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
 dotenv.config({ path: path.resolve(process.cwd(), '..', envFile) });
 
+if (!process.env.DATABASE_URL && !process.env.DB_PASSWORD) {
+  throw new Error('Database configuration is missing. Please check your environment variables.');
+}
+
 const sequelize = process.env.DATABASE_URL 
-  ? new Sequelize(process.env.DATABASE_URL)
+  ? new Sequelize(process.env.DATABASE_URL, {
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false
+        }
+      }
+    })
   : new Sequelize({
       dialect: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
+      host: process.env.DB_HOST,
       port: parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME || 'server_wizard',
-      username: process.env.DB_USER || 'postgres',
+      database: process.env.DB_NAME,
+      username: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      logging: false
+      logging: false,
+      dialectOptions: {
+        ssl: process.env.DB_SSL === 'true' ? {
+          require: true,
+          rejectUnauthorized: false
+        } : false
+      }
     });
 
 // CPU Model
