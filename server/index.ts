@@ -5,7 +5,23 @@ import dotenv from 'dotenv';
 
 // Load environment variables first, before any other imports
 const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
-dotenv.config({ path: path.join(__dirname, '..', envFile) });
+const rootDir = process.env.NODE_ENV === 'production' 
+  ? path.resolve(__dirname, '../../') // From dist/server to project root
+  : path.resolve(__dirname, '..');    // From server to project root
+
+// Load environment file
+const envPath = path.join(rootDir, envFile);
+console.log('Loading environment from:', envPath);
+dotenv.config({ path: envPath });
+
+// Debug environment variables
+console.log('Environment variables loaded:', {
+  NODE_ENV: process.env.NODE_ENV,
+  DB_HOST: process.env.DB_HOST,
+  DB_NAME: process.env.DB_NAME,
+  DB_USER: process.env.DB_USER,
+  hasPassword: !!process.env.DB_PASSWORD
+});
 
 import { sequelize } from './models';
 import chassisRoutes from './routes/chassis';
