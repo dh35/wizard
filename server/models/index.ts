@@ -6,26 +6,43 @@ import path from 'path';
 const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
 dotenv.config({ path: path.resolve(process.cwd(), '..', envFile) });
 
-if (!process.env.DATABASE_URL && !process.env.DB_PASSWORD) {
-  throw new Error('Database configuration is missing. Please check your environment variables.');
-}
+// Validate database configuration
+const validateDbConfig = () => {
+  if (process.env.DATABASE_URL) {
+    return;
+  }
+  
+  const requiredVars = ['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'];
+  const missingVars = requiredVars.filter(varName => !process.env[varName]);
+  
+  if (missingVars.length > 0) {
+    throw new Error(`Missing required database configuration: ${missingVars.join(', ')}`);
+  }
+  
+  if (typeof process.env.DB_PASSWORD !== 'string') {
+    throw new Error('Database password must be a string');
+  }
+};
 
-const sequelize = process.env.DATABASE_URL 
-  ? new Sequelize(process.env.DATABASE_URL, {
+validateDbConfig();
+
+// Create Sequelize instance
+const sequelizeConfig = process.env.DATABASE_URL 
+  ? {
       dialectOptions: {
         ssl: {
           require: true,
           rejectUnauthorized: false
         }
       }
-    })
-  : new Sequelize({
-      dialect: 'postgres',
+    }
+  : {
+      dialect: 'postgres' as const,
       host: process.env.DB_HOST,
       port: parseInt(process.env.DB_PORT || '5432'),
       database: process.env.DB_NAME,
       username: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
+      password: String(process.env.DB_PASSWORD), // Ensure password is a string
       logging: false,
       dialectOptions: {
         ssl: process.env.DB_SSL === 'true' ? {
@@ -33,7 +50,11 @@ const sequelize = process.env.DATABASE_URL
           rejectUnauthorized: false
         } : false
       }
-    });
+    };
+
+const sequelize = process.env.DATABASE_URL 
+  ? new Sequelize(process.env.DATABASE_URL, sequelizeConfig)
+  : new Sequelize(sequelizeConfig);
 
 // CPU Model
 interface CPUModel extends Model<InferAttributes<CPUModel>, InferCreationAttributes<CPUModel>> {
