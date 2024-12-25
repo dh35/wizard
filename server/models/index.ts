@@ -4,7 +4,18 @@ import path from 'path';
 
 // Load environment variables based on NODE_ENV
 const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
-dotenv.config({ path: path.resolve(process.cwd(), '..', envFile) });
+const rootDir = path.resolve(__dirname, '../../');
+dotenv.config({ path: path.join(rootDir, envFile) });
+
+// Debug environment loading
+console.log('Environment file:', path.join(rootDir, envFile));
+console.log('Database config:', {
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  // Don't log the actual password
+  hasPassword: !!process.env.DB_PASSWORD
+});
 
 // Validate database configuration
 const validateDbConfig = () => {
@@ -17,10 +28,6 @@ const validateDbConfig = () => {
   
   if (missingVars.length > 0) {
     throw new Error(`Missing required database configuration: ${missingVars.join(', ')}`);
-  }
-  
-  if (typeof process.env.DB_PASSWORD !== 'string') {
-    throw new Error('Database password must be a string');
   }
 };
 
@@ -42,7 +49,7 @@ const sequelizeConfig = process.env.DATABASE_URL
       port: parseInt(process.env.DB_PORT || '5432'),
       database: process.env.DB_NAME,
       username: process.env.DB_USER,
-      password: String(process.env.DB_PASSWORD), // Ensure password is a string
+      password: process.env.DB_PASSWORD,
       logging: false,
       dialectOptions: {
         ssl: process.env.DB_SSL === 'true' ? {
