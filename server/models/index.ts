@@ -1,17 +1,22 @@
 import { Sequelize, DataTypes, Model, InferAttributes, InferCreationAttributes, CreationOptional } from 'sequelize';
 import dotenv from 'dotenv';
+import path from 'path';
 
-dotenv.config();
+// Load environment variables based on NODE_ENV
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
+dotenv.config({ path: path.resolve(process.cwd(), '..', envFile) });
 
-const sequelize = new Sequelize({
-  dialect: 'postgres',
-  host: 'localhost',
-  port: 5432,
-  database: 'server_wizard',
-  username: 'postgres',
-  password: 'em121402EM$$',
-  logging: false
-});
+const sequelize = process.env.DATABASE_URL 
+  ? new Sequelize(process.env.DATABASE_URL)
+  : new Sequelize({
+      dialect: 'postgres',
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '5432'),
+      database: process.env.DB_NAME || 'server_wizard',
+      username: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD,
+      logging: false
+    });
 
 // CPU Model
 interface CPUModel extends Model<InferAttributes<CPUModel>, InferCreationAttributes<CPUModel>> {
