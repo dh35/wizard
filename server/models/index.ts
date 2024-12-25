@@ -4,16 +4,24 @@ import path from 'path';
 
 // Load environment variables based on NODE_ENV
 const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
-const rootDir = path.resolve(__dirname, '../../');
-dotenv.config({ path: path.join(rootDir, envFile) });
+
+// In production, we need to go up two levels from dist/models to reach root
+const rootDir = process.env.NODE_ENV === 'production' 
+  ? path.resolve(__dirname, '../../../')  // From dist/models to project root
+  : path.resolve(__dirname, '../../');    // From server/models to project root
+
+const envPath = path.join(rootDir, envFile);
+dotenv.config({ path: envPath });
 
 // Debug environment loading
-console.log('Environment file:', path.join(rootDir, envFile));
-console.log('Database config:', {
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  // Don't log the actual password
+console.log('Current directory:', __dirname);
+console.log('Root directory:', rootDir);
+console.log('Environment file path:', envPath);
+console.log('Environment variables:', {
+  NODE_ENV: process.env.NODE_ENV,
+  DB_HOST: process.env.DB_HOST,
+  DB_NAME: process.env.DB_NAME,
+  DB_USER: process.env.DB_USER,
   hasPassword: !!process.env.DB_PASSWORD
 });
 
