@@ -10,9 +10,12 @@
     "client": "cd client && npm start",
     "install-all": "npm install && cd client && npm install",
     "build": "cd client && npm run build && cd ../server && npx tsc",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npx tsc",
     "postinstall": "npm run build",
     "start:prod": "cd server && node dist/index.js",
-    "deploy": "npm run build && npm run start:prod"
+    "deploy": "npm run build:client && npm run build:server && npm run start:prod",
+    "deploy:clean": "rm -rf client/build server/dist && npm run deploy"
   },
   "dependencies": {
     "@types/react-router-dom": "^5.3.3",
