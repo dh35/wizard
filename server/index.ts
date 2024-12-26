@@ -20,6 +20,10 @@ import cors from 'cors';
 import { sequelize } from './config/database';
 import chassisRoutes from './routes/chassis';
 import quotesRoutes from './routes/quotes';
+import cpuRoutes from './routes/cpu';
+import gpuRoutes from './routes/gpu';
+import ramRoutes from './routes/ram';
+import storageRoutes from './routes/storage';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,6 +35,10 @@ app.use(express.json());
 // API routes
 app.use('/api/chassis', chassisRoutes);
 app.use('/api/quotes', quotesRoutes);
+app.use('/api/cpus', cpuRoutes);
+app.use('/api/gpus', gpuRoutes);
+app.use('/api/rams', ramRoutes);
+app.use('/api/storage', storageRoutes);
 
 // In production, serve static files and handle client routing
 if (process.env.NODE_ENV === 'production') {
