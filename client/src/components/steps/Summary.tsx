@@ -7,6 +7,7 @@ import { RAM } from '../../types/RAM';
 import { GPUQuantity } from '../../types/GPU';
 import { Storage } from '../../types/Storage';
 import { Chassis } from '../../types/Chassis';
+import axios from 'axios';
 
 export interface SummaryProps {
   config: {
@@ -199,24 +200,23 @@ const Summary: React.FC<SummaryProps> = ({ config, customerInfo }) => {
 • Monthly Cost: $${Math.round(costs.monthlyCost)}
 • Yearly Cost: $${Math.round(costs.yearlyTotal)} (includes 5% discount)\`\`\``;
 
-    navigator.clipboard.writeText(quote);
-
-    // Save the configuration to the server
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filename = `${customerInfo.replace(/[^a-zA-Z0-9]/g, '-')}-${timestamp}`;
-    
-    fetch('/api/quotes/save-quote', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    // Copy to clipboard
+    navigator.clipboard.writeText(quote).then(() => {
+      // Save the configuration to the server
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `${customerInfo.replace(/[^a-zA-Z0-9]/g, '-')}-${timestamp}`;
+      
+      axios.post('/api/quotes/save-quote', {
         filename,
         customerInfo,
         config,
         costs,
         quote
-      }),
+      }).catch(error => {
+        console.error('Failed to save quote:', error);
+      });
+    }).catch(error => {
+      console.error('Failed to copy to clipboard:', error);
     });
   };
 
