@@ -1,5 +1,5 @@
-import React from 'react';
-import { Box, Card, CardContent, Typography, Divider, Chip, Button, Stack } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Card, CardContent, Typography, Divider, Chip, Button, Stack, Snackbar, Alert } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { CPU } from '../../types/CPU';
@@ -22,6 +22,12 @@ export interface SummaryProps {
 }
 
 const Summary: React.FC<SummaryProps> = ({ config, customerInfo }) => {
+  const [snackbar, setSnackbar] = useState<{open: boolean; message: string; severity: 'success' | 'error'}>({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+
   // Calculate total GPU specifications
   const calculateGPUTotals = () => {
     if (!config.gpu || config.gpu.length === 0) return { totalVram: 0, totalTdp: 0 };
@@ -95,23 +101,69 @@ const Summary: React.FC<SummaryProps> = ({ config, customerInfo }) => {
         <head>
           <title>Crunchbits Server Configuration Summary</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h1 { color: #1976d2; margin-bottom: 30px; }
-            h2 { color: #1976d2; margin-top: 20px; }
-            .section { margin-bottom: 20px; }
+            body { 
+              font-family: Arial, sans-serif; 
+              padding: 20px; 
+              background-color: #121212;
+              color: #ffffff;
+            }
+            h1 { 
+              color: #ff1744; 
+              margin-bottom: 30px; 
+            }
+            h2 { 
+              color: #ff1744; 
+              margin-top: 20px; 
+            }
+            .section { 
+              margin-bottom: 20px;
+              background-color: #1e1e1e;
+              padding: 15px;
+              border-radius: 8px;
+            }
             .chip { 
               display: inline-block;
-              background: #e0e0e0;
+              background: #333333;
+              color: #ffffff;
               padding: 4px 8px;
               border-radius: 16px;
               margin: 4px;
               font-size: 12px;
             }
+            p {
+              margin: 8px 0;
+            }
+            @media print {
+              body {
+                background-color: #121212 !important;
+                color: #ffffff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .section {
+                background-color: #1e1e1e !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .chip {
+                background: #333333 !important;
+                color: #ffffff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              h1, h2 {
+                color: #ff1744 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+            }
           </style>
         </head>
         <body>
           <h1>Crunchbits Server Configuration Summary</h1>
-          <h2>Quote For: ${customerInfo}</h2>
+          <div class="section">
+            <h2>Quote For: ${customerInfo}</h2>
+          </div>
 
           <div class="section">
             <h2>CPU Configuration</h2>
@@ -160,6 +212,13 @@ const Summary: React.FC<SummaryProps> = ({ config, customerInfo }) => {
           </div>
 
           <div class="section">
+            <h2>System Totals</h2>
+            <p>Power: ${costs.totalPower}W (${costs.amperage.toFixed(2)}A @ 208V)</p>
+            <p>Monthly Cost: $${Math.round(costs.monthlyCost)}</p>
+            <p>Yearly Cost: $${Math.round(costs.yearlyTotal)} (includes 5% discount)</p>
+          </div>
+
+          <div class="section">
             <h2>Chassis Configuration</h2>
             ${config.chassis ? `
               <p>${config.chassis.manufacturer} ${config.chassis.model}</p>
@@ -179,7 +238,7 @@ const Summary: React.FC<SummaryProps> = ({ config, customerInfo }) => {
     printWindow.print();
   };
 
-  const generateDiscordQuote = () => {
+  const generateDiscordQuote = async () => {
     const quote = `🔧 __**Crunchbits Server Configuration**__ | [Register for an account!](https://get.crunchbits.com) \`\`\`ini
 [Customer] ${customerInfo}
 
@@ -200,24 +259,33 @@ const Summary: React.FC<SummaryProps> = ({ config, customerInfo }) => {
 • Monthly Cost: $${Math.round(costs.monthlyCost)}
 • Yearly Cost: $${Math.round(costs.yearlyTotal)} (includes 5% discount)\`\`\``;
 
-    // Copy to clipboard
-    navigator.clipboard.writeText(quote).then(() => {
+    try {
+      await navigator.clipboard.writeText(quote);
+      setSnackbar({
+        open: true,
+        message: 'Quote copied to clipboard!',
+        severity: 'success'
+      });
+
       // Save the configuration to the server
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const filename = `${customerInfo.replace(/[^a-zA-Z0-9]/g, '-')}-${timestamp}`;
       
-      axios.post('/api/quotes/save-quote', {
+      await axios.post('/api/quotes/save-quote', {
         filename,
         customerInfo,
         config,
         costs,
         quote
-      }).catch(error => {
-        console.error('Failed to save quote:', error);
       });
-    }).catch(error => {
-      console.error('Failed to copy to clipboard:', error);
-    });
+    } catch (error) {
+      console.error('Error:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to copy quote to clipboard',
+        severity: 'error'
+      });
+    }
   };
 
   return (
@@ -388,6 +456,19 @@ const Summary: React.FC<SummaryProps> = ({ config, customerInfo }) => {
           )}
         </CardContent>
       </Card>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+      >
+        <Alert 
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} 
+          severity={snackbar.severity}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
