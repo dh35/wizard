@@ -1,59 +1,5 @@
-import { Sequelize, DataTypes, Model, InferAttributes, InferCreationAttributes, CreationOptional } from 'sequelize';
-
-// Validate database configuration
-const validateDbConfig = () => {
-  if (process.env.DATABASE_URL) {
-    return;
-  }
-  
-  const requiredVars = ['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'];
-  const missingVars = requiredVars.filter(varName => !process.env[varName]);
-  
-  if (missingVars.length > 0) {
-    throw new Error(`Missing required database configuration: ${missingVars.join(', ')}`);
-  }
-};
-
-validateDbConfig();
-
-// Debug database configuration
-console.log('Database configuration:', {
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  hasPassword: !!process.env.DB_PASSWORD,
-  nodeEnv: process.env.NODE_ENV
-});
-
-// Create Sequelize instance
-const sequelizeConfig = process.env.DATABASE_URL 
-  ? {
-      dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false
-        }
-      }
-    }
-  : {
-      dialect: 'postgres' as const,
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME,
-      username: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      logging: false,
-      dialectOptions: {
-        ssl: process.env.DB_SSL === 'true' ? {
-          require: true,
-          rejectUnauthorized: false
-        } : false
-      }
-    };
-
-const sequelize = process.env.DATABASE_URL 
-  ? new Sequelize(process.env.DATABASE_URL, sequelizeConfig)
-  : new Sequelize(sequelizeConfig);
+import { DataTypes, Model, InferAttributes, InferCreationAttributes, CreationOptional } from 'sequelize';
+import { sequelize } from '../config/database';
 
 // CPU Model
 interface CPUModel extends Model<InferAttributes<CPUModel>, InferCreationAttributes<CPUModel>> {
@@ -199,7 +145,7 @@ interface ChassisModel extends Model<InferAttributes<ChassisModel>, InferCreatio
   isLtoCompatible: boolean;
 }
 
-const Chassis = sequelize.define('Chassis', {
+const Chassis = sequelize.define<ChassisModel>('Chassis', {
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
