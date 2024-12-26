@@ -1,10 +1,4 @@
 import { Sequelize } from 'sequelize';
-import dotenv from 'dotenv';
-import path from 'path';
-
-// Load environment variables from root directory
-const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
-dotenv.config({ path: path.join(__dirname, '../../', envFile) });
 
 const config = {
   development: {
@@ -36,6 +30,19 @@ if (env === 'production') {
   }
 }
 
-const sequelize = new Sequelize(config[env as keyof typeof config]);
+console.log('Database config:', {
+  ...config[env as keyof typeof config],
+  password: '***'
+});
+
+let sequelize: Sequelize;
+
+try {
+  sequelize = new Sequelize(config[env as keyof typeof config]);
+  console.log('Sequelize instance created');
+} catch (error) {
+  console.error('Failed to create Sequelize instance:', error);
+  process.exit(1);
+}
 
 export { sequelize, config }; 
