@@ -260,7 +260,29 @@ const Summary: React.FC<SummaryProps> = ({ config, customerInfo }) => {
 • Yearly Cost: $${Math.round(costs.yearlyTotal)} (includes 5% discount)\`\`\``;
 
     try {
-      await navigator.clipboard.writeText(quote);
+      // Try the modern clipboard API first
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(quote);
+      } else {
+        // Fallback for older browsers or non-HTTPS
+        const textArea = document.createElement('textarea');
+        textArea.value = quote;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          textArea.remove();
+        } catch (err) {
+          console.error('Fallback: Oops, unable to copy', err);
+          textArea.remove();
+          throw new Error('Copy failed');
+        }
+      }
+
       setSnackbar({
         open: true,
         message: 'Quote copied to clipboard!',
