@@ -36,7 +36,7 @@ const RAMSelection: React.FC<RAMSelectionProps> = ({
           params.append('cpuGeneration', selectedCPU.generation);
         }
 
-        const response = await axios.get(`/api/ram?${params.toString()}`);
+        const response = await axios.get(`/api/rams?${params.toString()}`);
         setRAMs(response.data);
       } catch (error) {
         console.error('Failed to fetch RAM options:', error);

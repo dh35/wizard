@@ -56,7 +56,7 @@ const CPUSelection: React.FC<CPUSelectionProps> = ({
       if (filters.manufacturer) params.append('manufacturer', filters.manufacturer);
       params.append('minCores', filters.minCores.toString());
 
-      const response = await axios.get(`/api/cpu?${params.toString()}`);
+      const response = await axios.get(`/api/cpus?${params.toString()}`);
       const sortedCPUs = response.data.sort((a: CPU, b: CPU) => a.tdp - b.tdp);
       setCPUs(sortedCPUs);
     } catch (error) {

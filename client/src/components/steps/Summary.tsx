@@ -205,7 +205,7 @@ const Summary: React.FC<SummaryProps> = ({ config, customerInfo }) => {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const filename = `${customerInfo.replace(/[^a-zA-Z0-9]/g, '-')}-${timestamp}`;
     
-    fetch('/api/save-quote', {
+    fetch('/api/quotes/save-quote', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -36,7 +36,7 @@ const GPUSelection: React.FC<GPUSelectionProps> = ({
   useEffect(() => {
     const fetchGPUs = async () => {
       try {
-        const response = await axios.get('/api/gpu');
+        const response = await axios.get('/api/gpus');
         setGPUs(response.data);
         setError(null);
       } catch (err) {
