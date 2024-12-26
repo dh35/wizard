@@ -1,4 +1,14 @@
-import { Chassis } from '../models/chassis';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load environment variables from .env.production in production
+if (process.env.NODE_ENV === 'production') {
+  const envPath = path.resolve(__dirname, '../../.env.production');
+  console.log('Loading environment from:', envPath);
+  dotenv.config({ path: envPath });
+}
+
+import { sequelize, Chassis } from '../models';
 
 export async function seedChassis() {
   console.log('Starting chassis seeding...');
