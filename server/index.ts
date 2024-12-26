@@ -34,7 +34,7 @@ app.use('/api/quotes', quotesRoutes);
 
 // In production, serve static files and handle client routing
 if (process.env.NODE_ENV === 'production') {
-  const clientBuildPath = path.resolve(__dirname, '../../../client/build');
+  const clientBuildPath = path.resolve(__dirname, '../../client/build');
   console.log('Setting up static files from:', clientBuildPath);
   app.use(express.static(clientBuildPath));
   
